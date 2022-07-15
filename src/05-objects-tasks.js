@@ -6,7 +6,6 @@
  *                                                                                                *
  ************************************************************************************************ */
 
-
 /**
  * Returns the rectangle object with width and height parameters and getArea() method
  *
@@ -20,10 +19,13 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  return {
+    width,
+    height,
+    getArea: () => width * height,
+  };
 }
-
 
 /**
  * Returns the JSON representation of specified object
@@ -35,10 +37,9 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
-
 
 /**
  * Returns the object of specified type from JSON representation
@@ -51,15 +52,14 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  return Object.setPrototypeOf(JSON.parse(json), proto);
 }
-
 
 /**
  * Css selectors builder
  *
- * Each complex selector can consists of type, id, class, attribute, pseudo-class
+ * Each complex selector can consist of type, id, class, attribute, pseudo-class
  * and pseudo-element selectors:
  *
  *    element#id.class[attr]:pseudoClass::pseudoElement
@@ -140,6 +140,117 @@ const cssSelectorBuilder = {
   },
 };
 
+/* FUK IT
+
+const cssSelectorBuilder = class {
+  constructor() {
+    this.orders = new Map([
+      ['', 0],
+      ['#', 1],
+      ['.', 2],
+      ['[', 3],
+      [':', 4],
+      ['::', 5],
+    ]);
+
+    this.map = new Map();
+    this.stringify = () => {
+      const s = Array.from(this.map.entries())
+        .map(([key, values]) => {
+          const value = Array.isArray(values) ? values.join(key) : values;
+          return key + value;
+        })
+        .join('');
+
+      this.map.clear();
+
+      return s;
+    };
+  }
+
+  static element(value) {
+    return this.set('', value, true);
+  }
+
+  static id(value) {
+    return this.set('#', value, true);
+  }
+
+  static pseudoElement(value) {
+    return this.set('::', value, true);
+  }
+
+  static class(value) {
+    return this.set('.', value);
+  }
+
+  static attr(value) {
+    return this.set('[', `${value}]`);
+  }
+
+  static pseudoClass(value) {
+    return this.set(':', value);
+  }
+
+  static set(prefix, value, unique = false) {
+    this.current = prefix;
+
+    if (!this.instance || (unique && this.instance.map.has(prefix))) this.newInstance();
+
+    if (!unique) {
+      const values = this.instance.map.has(prefix) ? this.instance.map.get(prefix) : [];
+      values[values.length] = value;
+      this.instance.map.set(prefix, values);
+    } else {
+      this.instance.map.set(prefix, value);
+    }
+
+    return this.checkOrder(prefix);
+  }
+
+  static combine(el1, div, el2) {
+    this.newInstance();
+
+    this.instance.map.set('', [el1.stringify(), el2.stringify()].join(` ${div} `));
+
+    return this.instance;
+  }
+
+  static newInstance() {
+    try {
+      this.instance = Object.setPrototypeOf(new this(), this);
+    } catch (_) {
+      if (this.last === this.current)
+      throw new Error('Element, id and pseudo-element should not occur
+      more then one time inside the selector');
+      else
+        throw new Error('Selector parts should be arranged in the following order:
+        element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+  }
+
+  static checkOrder(prefix) {
+    const orders = [];
+    this.instance.map.forEach((_, key) => {
+      orders[orders.length] = this.instance.orders.get(key);
+    });
+
+    const sorted = JSON.parse(JSON.stringify(orders));
+    sorted.sort((a, b) => a - b);
+
+    if (!orders.every((value, index) => value === sorted[index])) {
+      const value = this.instance.map.get(prefix);
+      this.instance.map.delete(prefix);
+      this.newInstance();
+      this.instance.map.set(prefix, value);
+    }
+
+    this.last = prefix;
+    return this.instance;
+  }
+};
+
+ */
 
 module.exports = {
   Rectangle,
